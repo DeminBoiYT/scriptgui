@@ -1,0 +1,159 @@
+-- Function to recreate the entire GUI
+local function recreateGUI()
+    local screenGui = Instance.new("ScreenGui")
+    screenGui.Name = "Home"
+    screenGui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
+
+    local frame = Instance.new("Frame")
+    frame.Size = UDim2.new(0, 320, 0, 360) -- Adjusted size to fit all buttons
+    frame.Position = UDim2.new(0.5, -160, 0.5, -180) -- Centered on the screen
+    frame.BackgroundColor3 = Color3.fromRGB(50, 50, 50) -- Dark gray background
+    frame.Active = true
+    frame.Draggable = true
+    frame.Parent = screenGui
+
+    local dragBar = Instance.new("Frame")
+    dragBar.Size = UDim2.new(1, 0, 0, 20) -- Full width, 20px height
+    dragBar.BackgroundColor3 = Color3.fromRGB(0, 255, 255) -- Cyan
+    dragBar.Parent = frame
+
+    local function createButton(name, text, position, color)
+        local button = Instance.new("TextButton")
+        button.Name = name
+        button.Text = text
+        button.Size = UDim2.new(0, 140, 0, 40) -- Size: 140x40 pixels
+        button.Position = position
+        button.BackgroundColor3 = color
+        button.TextColor3 = Color3.fromRGB(255, 255, 255) -- White text
+        button.Parent = frame
+        return button
+    end
+
+    local speedUpButton = createButton("SpeedUp", "+ SPEED", UDim2.new(0, 10, 0, 30), Color3.fromRGB(0, 255, 0))
+    local speedDownButton = createButton("SpeedDown", "- SPEED", UDim2.new(0, 170, 0, 30), Color3.fromRGB(255, 0, 0))
+    local jumpUpButton = createButton("JumpUp", "+ JUMP", UDim2.new(0, 10, 0, 80), Color3.fromRGB(0, 255, 0))
+    local jumpDownButton = createButton("JumpDown", "- JUMP", UDim2.new(0, 170, 0, 80), Color3.fromRGB(255, 0, 0))
+    local teleportButton = createButton("TeleportUp", "TELEPORT UP", UDim2.new(0, 90, 0, 130), Color3.fromRGB(255, 170, 0))
+    local flyButton = createButton("FlyButton", "ENABLE FLY", UDim2.new(0, 10, 0, 180), Color3.fromRGB(0, 85, 255))
+    local disableFlyButton = createButton("DisableFlyButton", "DISABLE EFFECTS", UDim2.new(0, 170, 0, 180), Color3.fromRGB(255, 85, 0))
+    local panicButton = createButton("PanicButton", "PANIC", UDim2.new(0, 90, 0, 230), Color3.fromRGB(255, 0, 255))
+
+    -- Button functionalities recreated
+    speedUpButton.MouseButton1Click:Connect(function()
+        local player = game.Players.LocalPlayer
+        local character = player.Character or player.CharacterAdded:Wait()
+        local humanoid = character:WaitForChild("Humanoid")
+        humanoid.WalkSpeed = humanoid.WalkSpeed + 10
+    end)
+
+    speedDownButton.MouseButton1Click:Connect(function()
+        local player = game.Players.LocalPlayer
+        local character = player.Character or player.CharacterAdded:Wait()
+        local humanoid = character:WaitForChild("Humanoid")
+        humanoid.WalkSpeed = math.max(0, humanoid.WalkSpeed - 10)
+    end)
+
+    jumpUpButton.MouseButton1Click:Connect(function()
+        local player = game.Players.LocalPlayer
+        local character = player.Character or player.CharacterAdded:Wait()
+        local humanoid = character:WaitForChild("Humanoid")
+        humanoid.JumpPower = humanoid.JumpPower + 10
+    end)
+
+    jumpDownButton.MouseButton1Click:Connect(function()
+        local player = game.Players.LocalPlayer
+        local character = player.Character or player.CharacterAdded:Wait()
+        local humanoid = character:WaitForChild("Humanoid")
+        humanoid.JumpPower = math.max(0, humanoid.JumpPower - 10)
+    end)
+
+    teleportButton.MouseButton1Click:Connect(function()
+        local player = game.Players.LocalPlayer
+        local character = player.Character or player.CharacterAdded:Wait()
+        character:SetPrimaryPartCFrame(character.PrimaryPart.CFrame + Vector3.new(0, 50, 0))
+    end)
+
+    local flying = false
+    local flyCooldown = false
+    local flyPath = false
+    local pathConnection
+
+    local function createPathPart(position)
+        local part = Instance.new("Part")
+        part.Size = Vector3.new(3, 1, 3)
+        part.Position = position
+        part.Anchored = true
+        part.Transparency = 0.9
+        part.CanCollide = true
+        part.Parent = workspace
+        game:GetService("Debris"):AddItem(part, 5)
+    end
+
+    local function enableFlying()
+        local player = game.Players.LocalPlayer
+        local character = player.Character or player.CharacterAdded:Wait()
+        local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
+        local userInputService = game:GetService("UserInputService")
+
+        flyPath = true
+
+        pathConnection = game:GetService("RunService").RenderStepped:Connect(function()
+            if flyPath then
+                local position = humanoidRootPart.Position - Vector3.new(0, 3, 0)
+                if userInputService:IsKeyDown(Enum.KeyCode.W) or userInputService:IsKeyDown(Enum.KeyCode.A) or userInputService:IsKeyDown(Enum.KeyCode.S) or userInputService:IsKeyDown(Enum.KeyCode.D) then
+                    createPathPart(position)
+                end
+            end
+        end)
+    end
+
+    local function disableFlying()
+        flyPath = false
+        if pathConnection then
+            pathConnection:Disconnect()
+            pathConnection = nil
+        end
+    end
+
+    flyButton.MouseButton1Click:Connect(function()
+        if flyCooldown then return end
+
+        flying = not flying
+
+        if flying then
+            enableFlying()
+        else
+            disableFlying()
+            flyCooldown = true
+            task.wait(2)
+            flyCooldown = false
+        end
+    end)
+
+    disableFlyButton.MouseButton1Click:Connect(function()
+        flying = false
+        flyCooldown = false
+        disableFlying()
+
+        local player = game.Players.LocalPlayer
+        local character = player.Character or player.CharacterAdded:Wait()
+        local humanoid = character:WaitForChild("Humanoid")
+        humanoid.WalkSpeed = 16
+        humanoid.JumpPower = 50
+    end)
+
+    panicButton.MouseButton1Click:Connect(function()
+        screenGui:Destroy()
+    end)
+end
+
+-- Right Shift to recreate GUI
+local userInputService = game:GetService("UserInputService")
+userInputService.InputBegan:Connect(function(input)
+    if input.KeyCode == Enum.KeyCode.RightShift then
+        recreateGUI()
+    end
+end)
+
+-- Initial GUI creation
+recreateGUI()
