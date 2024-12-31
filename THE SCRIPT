@@ -5,8 +5,8 @@ local function recreateGUI()
     screenGui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
 
     local frame = Instance.new("Frame")
-    frame.Size = UDim2.new(0, 320, 0, 360) -- Adjusted size to fit all buttons
-    frame.Position = UDim2.new(0.5, -160, 0.5, -180) -- Centered on the screen
+    frame.Size = UDim2.new(0, 320, 0, 410) -- Adjusted size to fit all buttons
+    frame.Position = UDim2.new(0.5, -160, 0.5, -205) -- Centered on the screen
     frame.BackgroundColor3 = Color3.fromRGB(50, 50, 50) -- Dark gray background
     frame.Active = true
     frame.Draggable = true
@@ -17,11 +17,31 @@ local function recreateGUI()
     dragBar.BackgroundColor3 = Color3.fromRGB(0, 255, 255) -- Cyan
     dragBar.Parent = frame
 
-    local function createButton(name, text, position, color)
+    -- Sidebar to display player's username
+    local username = game.Players.LocalPlayer.Name
+    local textWidth = #username * 10 + 40 -- Adjust width dynamically based on username length
+
+    local sidebar = Instance.new("Frame")
+    sidebar.Size = UDim2.new(0, textWidth, 1, 0)
+    sidebar.Position = UDim2.new(0, -textWidth, 0, 0)
+    sidebar.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+    sidebar.Parent = frame
+
+    local helloText = Instance.new("TextLabel")
+    helloText.Size = UDim2.new(1, 0, 0, 40)
+    helloText.Position = UDim2.new(0, 0, 0, 10)
+    helloText.BackgroundTransparency = 1
+    helloText.TextColor3 = Color3.fromRGB(255, 255, 255)
+    helloText.TextSize = 20
+    helloText.Font = Enum.Font.SourceSans
+    helloText.Text = "Hello, " .. username
+    helloText.Parent = sidebar
+
+    local function createButton(name, text, position, size, color)
         local button = Instance.new("TextButton")
         button.Name = name
         button.Text = text
-        button.Size = UDim2.new(0, 140, 0, 40) -- Size: 140x40 pixels
+        button.Size = size
         button.Position = position
         button.BackgroundColor3 = color
         button.TextColor3 = Color3.fromRGB(255, 255, 255) -- White text
@@ -29,14 +49,17 @@ local function recreateGUI()
         return button
     end
 
-    local speedUpButton = createButton("SpeedUp", "+ SPEED", UDim2.new(0, 10, 0, 30), Color3.fromRGB(0, 255, 0))
-    local speedDownButton = createButton("SpeedDown", "- SPEED", UDim2.new(0, 170, 0, 30), Color3.fromRGB(255, 0, 0))
-    local jumpUpButton = createButton("JumpUp", "+ JUMP", UDim2.new(0, 10, 0, 80), Color3.fromRGB(0, 255, 0))
-    local jumpDownButton = createButton("JumpDown", "- JUMP", UDim2.new(0, 170, 0, 80), Color3.fromRGB(255, 0, 0))
-    local teleportButton = createButton("TeleportUp", "TELEPORT UP", UDim2.new(0, 90, 0, 130), Color3.fromRGB(255, 170, 0))
-    local flyButton = createButton("FlyButton", "ENABLE FLY", UDim2.new(0, 10, 0, 180), Color3.fromRGB(0, 85, 255))
-    local disableFlyButton = createButton("DisableFlyButton", "DISABLE EFFECTS", UDim2.new(0, 170, 0, 180), Color3.fromRGB(255, 85, 0))
-    local panicButton = createButton("PanicButton", "PANIC", UDim2.new(0, 90, 0, 230), Color3.fromRGB(255, 0, 255))
+    local speedUpButton = createButton("SpeedUp", "+ SPEED", UDim2.new(0, 10, 0, 30), UDim2.new(0, 140, 0, 40), Color3.fromRGB(0, 255, 0))
+    local speedDownButton = createButton("SpeedDown", "- SPEED", UDim2.new(0, 170, 0, 30), UDim2.new(0, 140, 0, 40), Color3.fromRGB(255, 0, 0))
+    local jumpUpButton = createButton("JumpUp", "+ JUMP", UDim2.new(0, 10, 0, 80), UDim2.new(0, 140, 0, 40), Color3.fromRGB(0, 255, 0))
+    local jumpDownButton = createButton("JumpDown", "- JUMP", UDim2.new(0, 170, 0, 80), UDim2.new(0, 140, 0, 40), Color3.fromRGB(255, 0, 0))
+    local teleportButton = createButton("TeleportUp", "TELEPORT UP", UDim2.new(0, 90, 0, 130), UDim2.new(0, 140, 0, 40), Color3.fromRGB(255, 170, 0))
+    local flyButton = createButton("FlyButton", "ENABLE FLY", UDim2.new(0, 10, 0, 180), UDim2.new(0, 140, 0, 40), Color3.fromRGB(0, 85, 255))
+    local disableFlyButton = createButton("DisableFlyButton", "DISABLE EFFECTS", UDim2.new(0, 170, 0, 180), UDim2.new(0, 140, 0, 40), Color3.fromRGB(255, 85, 0))
+    local panicButton = createButton("PanicButton", "PANIC", UDim2.new(0, 90, 0, 230), UDim2.new(0, 140, 0, 40), Color3.fromRGB(255, 0, 255))
+
+    -- New "Click to Teleport" button
+    local teleportToolButton = createButton("TeleportTool", "Click to Teleport", UDim2.new(0, 90, 0, 280), UDim2.new(0, 160, 0, 50), Color3.fromRGB(0, 170, 255))
 
     -- Button functionalities recreated
     speedUpButton.MouseButton1Click:Connect(function()
@@ -144,6 +167,26 @@ local function recreateGUI()
 
     panicButton.MouseButton1Click:Connect(function()
         screenGui:Destroy()
+    end)
+
+    teleportToolButton.MouseButton1Click:Connect(function()
+        local tool = Instance.new("Tool")
+        tool.Name = "tp click"
+        tool.RequiresHandle = false
+        tool.Parent = game.Players.LocalPlayer:WaitForChild("Backpack")
+
+        tool.Activated:Connect(function()
+            local mouse = game.Players.LocalPlayer:GetMouse()
+
+            mouse.Button1Down:Connect(function()
+                local target = mouse.Target
+                if target then
+                    local position = mouse.Hit.Position
+                    local character = game.Players.LocalPlayer.Character or game.Players.LocalPlayer.CharacterAdded:Wait()
+                    character:SetPrimaryPartCFrame(CFrame.new(position + Vector3.new(0, 5, 0)))
+                end
+            end)
+        end)
     end)
 end
 
